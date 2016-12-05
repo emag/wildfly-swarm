@@ -52,7 +52,7 @@ class KeycloakJsonGenerator {
         populateAllAdapterConfigs().forEach((json, field) -> {
             try {
                 PropertyDescriptor property = new PropertyDescriptor(field.getName(), adapterConfig.getClass());
-                set(adapterConfig, json, field, property.getWriteMethod());
+                set(adapterConfig, json, field.getType(), property.getWriteMethod());
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -77,22 +77,22 @@ class KeycloakJsonGenerator {
         return allAdapterConfigs;
     }
 
-    private static void set(AdapterConfig adapterConfig, String json, Field field, Method setter) throws IllegalAccessException, InvocationTargetException {
+    private static void set(AdapterConfig adapterConfig, String json, Class<?> type, Method setter) throws IllegalAccessException, InvocationTargetException {
         if (! REQUESTED_ADAPTER_CONFIGS.contains(json)) {
             return;
         }
 
-        if (field.getType() == boolean.class || field.getType() == Boolean.class) {
+        if (type == boolean.class || type == Boolean.class) {
             setter.invoke(adapterConfig, Boolean.valueOf(System.getProperty(PREFIX + json)));
             return;
         }
 
-        if (field.getType() == int.class  || field.getType() == Integer.class) {
+        if (type == int.class  || type == Integer.class) {
             setter.invoke(adapterConfig, Integer.valueOf(System.getProperty(PREFIX + json)));
             return;
         }
 
-        if (field.getType() == Map.class) {
+        if (type == Map.class) {
             String[] pairs = System.getProperty(PREFIX + json).split(",");
             Map<String, Object> map = new HashMap<>();
             for (String pair : pairs) {
