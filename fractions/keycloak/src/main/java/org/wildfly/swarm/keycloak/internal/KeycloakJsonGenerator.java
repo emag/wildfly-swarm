@@ -1,5 +1,6 @@
 package org.wildfly.swarm.keycloak.internal;
 
+import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -34,30 +35,27 @@ class KeycloakJsonGenerator {
     }
 
     static InputStream generate() {
-        AdapterConfig adapterConfig = setupAdapterConfig();
-
         byte[] keycloakJson = null;
         try {
             keycloakJson = new ObjectMapper()
                     .setSerializationInclusion(JsonInclude.Include.NON_NULL)
-                    .writeValueAsBytes(adapterConfig);
+                    .writeValueAsBytes(setupAdapterConfig());
         } catch (Exception e) {
             e.printStackTrace();
         }
         return new ByteArrayInputStream(keycloakJson);
     }
 
-    private static AdapterConfig setupAdapterConfig() {
+    private static AdapterConfig setupAdapterConfig() throws IntrospectionException, InvocationTargetException, IllegalAccessException {
         AdapterConfig adapterConfig = new AdapterConfig();
 
-        populateAllAdapterConfigs().forEach((json, field) -> {
-            try {
-                PropertyDescriptor property = new PropertyDescriptor(field.getName(), adapterConfig.getClass());
-                set(adapterConfig, json, field.getType(), property.getWriteMethod());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
+        for (Map.Entry<String, Field> config : populateAllAdapterConfigs().entrySet()) {
+            String json = config.getKey();
+            Field field = config.getValue();
+
+            PropertyDescriptor property = new PropertyDescriptor(field.getName(), adapterConfig.getClass());
+            set(adapterConfig, json, field.getType(), property.getWriteMethod());
+        }
 
         return adapterConfig;
     }
