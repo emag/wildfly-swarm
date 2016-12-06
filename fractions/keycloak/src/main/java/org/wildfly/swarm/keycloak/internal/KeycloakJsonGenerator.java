@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -64,15 +65,11 @@ class KeycloakJsonGenerator {
     private static Map<String, Field> populateAllAdapterConfigs() {
         Map<String, Field> allAdapterConfigs = new HashMap<>();
 
-        for (Field field : BaseRealmConfig.class.getDeclaredFields()) {
-            allAdapterConfigs.put(field.getAnnotation(JsonProperty.class).value(), field);
-        }
-        for (Field field : BaseAdapterConfig.class.getDeclaredFields()) {
-            allAdapterConfigs.put(field.getAnnotation(JsonProperty.class).value(), field);
-        }
-        for (Field field : AdapterConfig.class.getDeclaredFields()) {
-            allAdapterConfigs.put(field.getAnnotation(JsonProperty.class).value(), field);
-        }
+        Arrays.asList(BaseRealmConfig.class, BaseAdapterConfig.class, AdapterConfig.class).forEach(config -> {
+            for (Field field : config.getDeclaredFields()) {
+                allAdapterConfigs.put(field.getAnnotation(JsonProperty.class).value(), field);
+            }
+        });
 
         return allAdapterConfigs;
     }
